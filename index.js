@@ -1,46 +1,68 @@
+import * as React from "https://cdn.skypack.dev/react@17.0.1";
+import * as ReactDOM from "https://cdn.skypack.dev/react-dom@17.0.1";
 
-const renderer = new marked.Renderer();
+const defaultContent = `
+Husnain Saeed
+
+# Hello, 
+## You'r welcom at
+### My Code Pen
+
+
+\`<div>Inline code</div>\`
+
+\`\`\`
+const multipleLineCode = (param) => {
+    if(param) {
+        return param
+    }
+}
+\`\`\`
+
+**Some bold text**
+
+> Block Quot
+
+1. First list item
+2. Second list item
+`
 
 marked.setOptions({
   breaks: true,
+  highlight: function (code) {
+    return Prism.highlight(code, Prism.languages.javascript, 'javascript');
+  }
 });
 
-function App() {
-  const [text, setText] = React.useState("");
+const renderer = new marked.Renderer();
+renderer.link = function (href, title, text) {
+  return `<a target="_blank" href="${href}">${text}</a>`;
+};
+
+const Editor = ({ content, handleTextareaChange }) => 
+  <textarea value={content} onChange={handleTextareaChange} id="editor" />
+
+const Previewer = ({content}) => (
+  <div id="preview" 
+    dangerouslySetInnerHTML={{
+      __html: marked(content, { renderer: renderer })
+    }}
+  />
+);
+
+const App = () => {
+  const [content, setContent] = React.useState(defaultContent)
+  
+  const handleTextareaChange = (event) => {
+    setContent(event.target.value)
+  }
 
   return (
-    <div className="text-center px-4">
-      <h1 className="p-4">My Markdown Previewer</h1>
-      <textarea
-        name="text"
-        id="text"
-        onChange={(e) => setText(e.target.value)}
-        rows="10"
-        cols="20"
-        className="textarea"
-        value={text}
-      ></textarea>
-      <h3 className="mt-3">Output</h3>
-      <Preview markdown={text} />
+    <div class="main">
+      <Editor content={content} handleTextareaChange={handleTextareaChange} />
+      <Previewer content={content} />
     </div>
-  );
-}  
-
-function Preview(props) {
-  const markdown = props.markdown || "";
-
-  const createMarkup = () => {
-    return { __html: marked(markdown) };
-  };
-
-  return (
-    <div
-      dangerouslySetInnerHTML={createMarkup()}
-      id="preview"
-    ></div>
-  );
+  )
 }
 
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+ReactDOM.render(<App />, document.querySelector("#app"));
